@@ -10,7 +10,7 @@ import {
   getAllTopics,
   saveQuiz
 } from './db.js';
-import { generateQuiz } from './services/quizzService.js';
+import { generateQuiz, recordAnswer } from './services/quizzService.js';
 import { suggestDailyChallenge, getTopicStats } from './services/weaknessService.js';
 import { recordQuizCompletion, getProgress, getLeaderboard } from './services/gamificationService.js';
 import { runQuizInteractive, formatScore, close } from './utils.js';
@@ -91,7 +91,10 @@ program
         console.log(`\n${formatScore(score)}\n`);
         console.log(`Correct answers: ${answers.filter((a, i) => a === quiz.questions[i].correct_answer).length}/${quiz.questions.length}\n`);
         
-        // Record completion
+        // Record quiz response and mark as completed
+        recordAnswer(quizId, answers, score);
+        
+        // Record completion in user stats
         recordQuizCompletion(score);
         
         const progress = getProgress();
@@ -136,6 +139,11 @@ program
 
       await runQuizInteractive(quiz, async (answers, score) => {
         console.log(`\n${formatScore(score)}\n`);
+        
+        // Record quiz response and mark as completed
+        recordAnswer(quizId, answers, score);
+        
+        // Record completion in user stats
         recordQuizCompletion(score);
       });
 

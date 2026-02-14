@@ -6,12 +6,13 @@ export function identifyWeakTopics(threshold = 70) {
       t.id,
       t.name,
       t.slug,
-      COUNT(q.id) as attempts,
-      AVG(q.score) as avg_score
+      COUNT(qr.id) as attempts,
+      AVG(qr.score) as avg_score
     FROM topics t
-    LEFT JOIN quizzes q ON t.id = q.topic_id AND q.completed = 1
+    LEFT JOIN quizzes q ON t.id = q.topic_id
+    LEFT JOIN quiz_responses qr ON q.id = qr.quiz_id
     GROUP BY t.id
-    HAVING AVG(q.score) IS NULL OR AVG(q.score) < ?
+    HAVING COUNT(qr.id) > 0 AND AVG(qr.score) < ?
     ORDER BY avg_score ASC
   `);
   return stmt.all(threshold);
@@ -23,11 +24,12 @@ export function getTopicStats(topicId) {
       t.id,
       t.name,
       t.slug,
-      COUNT(q.id) as total_attempts,
-      ROUND(AVG(q.score), 2) as avg_score,
-      MAX(q.created_at) as last_attempted
+      COUNT(qr.id) as total_attempts,
+      ROUND(AVG(qr.score), 2) as avg_score,
+      MAX(qr.timestamp) as last_attempted
     FROM topics t
-    LEFT JOIN quizzes q ON t.id = q.topic_id AND q.completed = 1
+    LEFT JOIN quizzes q ON t.id = q.topic_id
+    LEFT JOIN quiz_responses qr ON q.id = qr.quiz_id
     WHERE t.id = ?
     GROUP BY t.id
   `);
@@ -48,9 +50,10 @@ export function suggestDailyChallenge() {
 
 export function calculateAverageScore(topicId) {
   const stmt = db.prepare(`
-    SELECT AVG(score) as avg_score, COUNT(*) as total
-    FROM quizzes
-    WHERE topic_id = ? AND completed = 1
+    SELECT AVG(qr.score) as avg_score, COUNT(qr.id) as total
+    FROM quiz_responses qr
+    JOIN quizzes q ON qr.quiz_id = q.id
+    WHERE q.topic_id = ?
   `);
   return stmt.get(topicId);
 }
