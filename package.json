@@ -1,0 +1,26 @@
+{
+  "name": "gamifiedlearningplatform",
+  "version": "1.0.0",
+  "description": "AI-powered learning tracker with gamified dashboard.",
+  "homepage": "https://github.com/houdaifaboucenna/deeptrack-CLI#readme",
+  "bugs": {
+    "url": "https://github.com/houdaifaboucenna/deeptrack-CLI/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/houdaifaboucenna/deeptrack-CLI.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "commander": "^14.0.3"
+  }
+}
