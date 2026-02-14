@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepTrack - Learning Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h2 {
+      font-size: 1.3em;
+      margin-bottom: 15px;
+      color: #333;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+      font-size: 1.1em;
+    }
+
+    .stat-label {
+      color: #666;
+    }
+
+    .stat-value {
+      font-weight: bold;
+      color: #667eea;
+      font-size: 1.3em;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      margin: 4px;
+    }
+
+    .badges {
+      margin-top: 10px;
+    }
+
+    .topic-item {
+      background: #f5f5f5;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 6px;
+    }
+
+    .topic-name {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .topic-stats {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: white;
+      font-size: 1.2em;
+    }
+
+    .error {
+      background: #ff6b6b;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .streak-counter {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #764ba2;
+      text-align: center;
+    }
+
+    .avg-score {
+      font-size: 3em;
+      font-weight: bold;
+      color: #667eea;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.8em;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎯 DeepTrack</h1>
+      <p class="subtitle">Your AI-Powered Learning Dashboard</p>
+    </header>
+
+    <div id="app"></div>
+  </div>
+
+  <script>
+    const apiUrl = '/api';
+
+    async function fetchStats() {
+      try {
+        const response = await fetch(`${apiUrl}/stats`);
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        return null;
+      }
+    }
+
+    async function fetchTopics() {
+      try {
+        const response = await fetch(`${apiUrl}/topics`);
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching topics:', error);
+        return [];
+      }
+    }
+
+    async function fetchLeaderboard() {
+      try {
+        const response = await fetch(`${apiUrl}/leaderboard`);
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        return [];
+      }
+    }
+
+    async function fetchDailyChallenge() {
+      try {
+        const response = await fetch(`${apiUrl}/daily-challenge`);
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching daily challenge:', error);
+        return null;
+      }
+    }
+
+    function renderStats(stats) {
+      return `
+        <div class="card">
+          <h2>📊 Your Statistics</h2>
+          <div class="stat">
+            <span class="stat-label">Total Quizzes:</span>
+            <span class="stat-value">${stats.total_quizzes}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Average Score:</span>
+            <span class="stat-value">${stats.average_score}%</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">🔥 Streak:</span>
+            <span class="stat-value">${stats.streak} days</span>
+          </div>
+          ${stats.badges.length > 0 ? `
+            <div class="badges">
+              ${stats.badges.map(b => `<span class="badge">${b}</span>`).join('')}
+            </div>
+          ` : '<p style="color: #999; margin-top: 10px;">No badges yet. Take a quiz to earn one!</p>'}
+        </div>
+      `;
+    }
+
+    function renderTopics(topics) {
+      if (topics.length === 0) {
+        return `
+          <div class="card">
+            <h2>📚 Topics</h2>
+            <div class="empty-state">
+              <p>No topics yet.</p>
+              <p style="margin-top: 10px;">Use: <code>deeptrack learn "Topic Name"</code></p>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card">
+          <h2>📚 Your Topics</h2>
+          ${topics.map(t => `
+            <div class="topic-item">
+              <div class="topic-name">${t.name}</div>
+              <div class="topic-stats">
+                ${t.stats ? `
+                  Attempts: ${t.stats.total_attempts || 0} | 
+                  Avg: ${t.stats.avg_score || 'N/A'}%
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${(t.stats.avg_score || 0)}%"></div>
+                  </div>
+                ` : 'No attempts yet'}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderLeaderboard(leaderboard) {
+      if (leaderboard.length === 0) {
+        return `
+          <div class="card">
+            <h2>🏆 Topic Leaderboard</h2>
+            <div class="empty-state">No data yet</div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card">
+          <h2>🏆 Top Topics</h2>
+          ${leaderboard.slice(0, 5).map((t, i) => `
+            <div class="topic-item">
+              <div class="topic-name">#${i + 1} ${t.name}</div>
+              <div class="topic-stats">
+                Score: ${t.avg_score}% | Attempts: ${t.attempts}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    async function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = '<div class="loading">Loading your dashboard...</div>';
+
+      const [stats, topics, leaderboard] = await Promise.all([
+        fetchStats(),
+        fetchTopics(),
+        fetchLeaderboard()
+      ]);
+
+      let html = '<div class="grid">';
+
+      if (stats) {
+        html += renderStats(stats);
+      }
+
+      html += renderTopics(topics);
+      html += renderLeaderboard(leaderboard);
+      html += '</div>';
+
+      app.innerHTML = html;
+    }
+
+    // Refresh every 5 seconds
+    render();
+    setInterval(render, 5000);
+  </script>
+</body>
+</html>
