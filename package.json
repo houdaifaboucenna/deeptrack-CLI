@@ -15,7 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node tests/integration.test.js",
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "dashboard": "node dashboard/server.js",
